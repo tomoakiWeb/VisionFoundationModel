@@ -8,13 +8,27 @@
 import SwiftUI
 import UIKit
 
+class PortraitImagePickerController: UIImagePickerController {
+    override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
+        return .portrait
+    }
+
+    override var preferredInterfaceOrientationForPresentation: UIInterfaceOrientation {
+        return .portrait
+    }
+
+    override var shouldAutorotate: Bool {
+        return false
+    }
+}
+
 struct ImagePicker: UIViewControllerRepresentable {
     @Binding var selectedImage: UIImage?
     var sourceType: UIImagePickerController.SourceType
     @Environment(\.dismiss) private var dismiss
 
     func makeUIViewController(context: Context) -> UIImagePickerController {
-        let picker = UIImagePickerController()
+        let picker = PortraitImagePickerController()
         picker.sourceType = sourceType
         picker.delegate = context.coordinator
         return picker
