@@ -43,6 +43,11 @@ func preprocessImage(_ image: UIImage) -> UIImage? {
 - テキストと背景のコントラストを強調
 - 処理速度の向上
 
+|変換前|変換後|
+|---|---|
+|<img width="1000" alt="D41F7ED4-3B62-4ACC-9C29-DDA9F7EBBAEE" src="https://github.com/user-attachments/assets/bd86f600-2f0d-4c20-9a78-c34273c13939" />|<img width="1000" alt="09D60C2D-E842-4C25-A19C-6B5CD5C59F68" src="https://github.com/user-attachments/assets/b3f71963-6b9a-440e-81ef-5451d4660258" />|
+
+
 ### 2. VNRecognizeTextRequestの設定
 
 Visionフレームワークの`VNRecognizeTextRequest`を使用してテキストを認識します：
