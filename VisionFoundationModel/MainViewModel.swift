@@ -13,11 +13,21 @@ class MainViewModel {
     var errorMessage = ""
     var recognizedText = ""
     var isProcessingOCR = false
+    var isProcessingAI = false
+    var extractedWords: [VocabularyEntry] = []
+    var modelAvailability: SystemLanguageModel.Availability = .unavailable(.deviceNotEligible)
 
     private let visionService = VisionTextRecognitionService()
+    private let foundationModelsService = FoundationModelsService()
 
     init() {
         checkCameraPermission()
+        checkModelAvailability()
+    }
+
+    func checkModelAvailability() {
+        foundationModelsService.checkModelAvailability()
+        modelAvailability = foundationModelsService.modelAvailability
     }
 
     func checkCameraPermission() {
@@ -103,6 +113,43 @@ class MainViewModel {
                 showPermissionAlert = true
             }
             return []
+        }
+    }
+
+    func processOCRAndAI() async {
+        await processOCR()
+        if !recognizedText.isEmpty {
+            await processAI()
+        }
+    }
+
+    func processAI() async {
+        guard !recognizedText.isEmpty else {
+            errorMessage = "認識されたテキストがありません"
+            showPermissionAlert = true
+            return
+        }
+
+        guard case .available = modelAvailability else {
+            errorMessage = "このデバイスではAI機能が利用できません"
+            showPermissionAlert = true
+            return
+        }
+        isProcessingAI = true
+        extractedWords = []
+
+        do {
+            let vocabularyData = try await foundationModelsService.extractVocabularyData(from: recognizedText)
+            await MainActor.run {
+                extractedWords = vocabularyData.entries
+                isProcessingAI = false
+            }
+        } catch {
+            await MainActor.run {
+                errorMessage = "AI処理に失敗しました: \(error.localizedDescription)"
+                showPermissionAlert = true
+                isProcessingAI = false
+            }
         }
     }
 }

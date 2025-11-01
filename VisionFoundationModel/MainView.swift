@@ -7,6 +7,7 @@
 
 import SwiftUI
 import AVFoundation
+import FoundationModels
 
 struct MainView: View {
     @State private var viewModel = MainViewModel()
@@ -81,7 +82,31 @@ struct MainView: View {
                             .foregroundColor(.white)
                             .cornerRadius(10)
                         }
-                        .disabled(viewModel.isProcessingOCR)
+                        .disabled(viewModel.isProcessingOCR || viewModel.isProcessingAI)
+                    }
+                    
+                    if !viewModel.recognizedText.isEmpty, case .available = viewModel.modelAvailability {
+                        Button(action: {
+                            Task {
+                                await viewModel.processAI()
+                            }
+                        }) {
+                            HStack {
+                                if viewModel.isProcessingAI {
+                                    ProgressView()
+                                        .scaleEffect(0.8)
+                                } else {
+                                    Image(systemName: "brain.head.profile")
+                                }
+                                Text(viewModel.isProcessingAI ? "AIで単語を抽出中..." : "AIで単語を抽出")
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color.purple)
+                            .foregroundColor(.white)
+                            .cornerRadius(10)
+                        }
+                        .disabled(viewModel.isProcessingOCR || viewModel.isProcessingAI)
                     }
                     
                     if !viewModel.recognizedText.isEmpty {
@@ -120,9 +145,50 @@ struct MainView: View {
                             .cornerRadius(8)
                         }
                     }
+                    
+                    if !viewModel.extractedWords.isEmpty {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("抽出された単語:")
+                                .font(.headline)
+
+                            ForEach(Array(viewModel.extractedWords.enumerated()), id: \.offset) { index, entry in
+                                VStack(alignment: .leading, spacing: 8) {
+                                    HStack {
+                                        Text(entry.word)
+                                            .font(.headline)
+                                            .foregroundColor(.primary)
+
+                                        if let partOfSpeech = entry.partOfSpeech {
+                                            Text("(\(partOfSpeech))")
+                                                .font(.caption)
+                                                .foregroundColor(.secondary)
+                                        }
+
+                                        Spacer()
+                                    }
+
+                                    Text(entry.meaning)
+                                        .font(.subheadline)
+                                        .foregroundColor(.secondary)
+
+                                    if !entry.exampleSentence.isEmpty {
+                                        Text(entry.exampleSentence)
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                            .italic()
+                                            .padding(.top, 4)
+                                    }
+                                }
+                                .padding()
+                                .background(Color(.systemGray6))
+                                .cornerRadius(8)
+                            }
+                        }
+                    }
                 }
                 .padding()
             }
+            .navigationTitle("Vision Foundation Model")
             .fullScreenCover(isPresented: $viewModel.showCamera) {
                 ImagePicker(
                     selectedImage: $viewModel.capturedImage,
