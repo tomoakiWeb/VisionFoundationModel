@@ -9,7 +9,6 @@ class MainViewModel {
     var showPermissionAlert = false
     var showCamera = false
     var capturedImage: UIImage?
-    var showingActionSheet = false
     var errorMessage = ""
     var recognizedText = ""
     var isProcessingOCR = false
@@ -100,28 +99,7 @@ class MainViewModel {
             }
         }
     }
-    
-    func detectTextRegions() async -> [TextRegion] {
-        guard let image = capturedImage else { return [] }
 
-        do {
-            let regions = try await visionService.detectTextRegions(in: image)
-            return regions
-        } catch {
-            await MainActor.run {
-                errorMessage = "テキスト領域の検出に失敗しました: \(error.localizedDescription)"
-                showPermissionAlert = true
-            }
-            return []
-        }
-    }
-
-    func processOCRAndAI() async {
-        await processOCR()
-        if !recognizedText.isEmpty {
-            await processAI()
-        }
-    }
 
     func processAI() async {
         guard !recognizedText.isEmpty else {

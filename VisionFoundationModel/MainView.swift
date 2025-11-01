@@ -188,7 +188,6 @@ struct MainView: View {
                 }
                 .padding()
             }
-            .navigationTitle("Vision Foundation Model")
             .fullScreenCover(isPresented: $viewModel.showCamera) {
                 ImagePicker(
                     selectedImage: $viewModel.capturedImage,

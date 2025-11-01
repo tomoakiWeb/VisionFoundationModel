@@ -8,14 +8,12 @@
 import Foundation
 import Vision
 import UIKit
-import SwiftUI
-import Combine
 
 @MainActor
-class VisionTextRecognitionService: ObservableObject {
-    @Published var isProcessing = false
-    @Published var recognizedText = ""
-    @Published var errorMessage: String?
+class VisionTextRecognitionService {
+    var isProcessing = false
+    var recognizedText = ""
+    var errorMessage: String?
 
     func recognizeText(from image: UIImage) async throws -> String {
         return try await withCheckedThrowingContinuation { continuation in
@@ -108,89 +106,6 @@ class VisionTextRecognitionService: ObservableObject {
 
         guard let grayImage = context?.makeImage() else { return nil }
         return UIImage(cgImage: grayImage)
-    }
-
-    
-    func detectTextRegions(in image: UIImage) async throws -> [TextRegion] {
-        return try await withCheckedThrowingContinuation { continuation in
-            isProcessing = true
-
-            guard let cgImage = image.cgImage else {
-                isProcessing = false
-                continuation.resume(throwing: VisionError.invalidImage)
-                return
-            }
-
-            let request = VNRecognizeTextRequest { request, error in
-                DispatchQueue.main.async {
-                    self.isProcessing = false
-
-                    if let error = error {
-                        continuation.resume(throwing: error)
-                        return
-                    }
-
-                    guard let observations = request.results as? [VNRecognizedTextObservation] else {
-                        continuation.resume(throwing: VisionError.noTextFound)
-                        return
-                    }
-
-                    var textRegions: [TextRegion] = []
-
-                    for observation in observations {
-                        guard let topCandidate = observation.topCandidates(1).first else { continue }
-                        
-                        let boundingBox = observation.boundingBox
-                        let imageSize = CGSize(width: cgImage.width, height: cgImage.height)
-                        let convertedBox = VNImageRectForNormalizedRect(
-                            boundingBox,
-                            Int(imageSize.width),
-                            Int(imageSize.height)
-                        )
-
-                        let textRegion = TextRegion(
-                            text: topCandidate.string,
-                            boundingBox: convertedBox,
-                            confidence: topCandidate.confidence
-                        )
-
-                        textRegions.append(textRegion)
-                    }
-
-                    continuation.resume(returning: textRegions)
-                }
-            }
-
-            request.recognitionLevel = .accurate
-            request.usesLanguageCorrection = true
-
-            let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
-
-            do {
-                try handler.perform([request])
-            } catch {
-                DispatchQueue.main.async {
-                    self.isProcessing = false
-                    continuation.resume(throwing: error)
-                }
-            }
-        }
-    }
-
-    func clearResults() {
-        recognizedText = ""
-        errorMessage = nil
-    }
-}
-
-// MARK: - Data Models
-struct TextRegion {
-    let text: String
-    let boundingBox: CGRect
-    let confidence: Float
-
-    var isHighConfidence: Bool {
-        return confidence > 0.8
     }
 }
 

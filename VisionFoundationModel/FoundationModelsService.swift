@@ -7,8 +7,6 @@
 
 import Foundation
 import FoundationModels
-import SwiftUI
-import Combine
 
 // MARK: - Data Models for Structured Output
 @Generable(description: "Extracted vocabulary data from text")
@@ -34,9 +32,9 @@ struct VocabularyEntry {
 
 // MARK: - Foundation Models Service
 @MainActor
-class FoundationModelsService: ObservableObject {
-    @Published var isProcessing = false
-    @Published var modelAvailability: SystemLanguageModel.Availability = .unavailable(.deviceNotEligible)
+class FoundationModelsService {
+    var isProcessing = false
+    var modelAvailability: SystemLanguageModel.Availability = .unavailable(.deviceNotEligible)
 
     private let model = SystemLanguageModel.default
 
@@ -92,39 +90,6 @@ class FoundationModelsService: ObservableObject {
             generating: VocabularyData.self
         )
 
-        return response.content
-    }
-
-    /// 単語の詳細情報を補完する
-    func enhanceWordInformation(word: String) async throws -> VocabularyEntry {
-        guard case .available = modelAvailability else {
-            throw FoundationModelsError.modelUnavailable
-        }
-
-        isProcessing = true
-        defer { isProcessing = false }
-
-        let instructions = """
-        あなたは英語学習を支援するAIアシスタントです。
-        与えられた英単語の詳細な情報を提供してください。
-
-        以下の情報を含めてください：
-        1. 意味は日本語で分かりやすく説明する
-        2. 例文は必ず英語で、実用的で覚えやすい文章を作成する
-        3. 正確な品詞を日本語で記載する
-        """
-
-        let prompt = """
-        英単語「\(word)」の詳細情報を提供してください。
-        学習者が理解しやすいように、意味、例文、品詞を含めてください。
-        """
-
-        let session = LanguageModelSession(instructions: instructions)
-
-        let response = try await session.respond(
-            to: prompt,
-            generating: VocabularyEntry.self
-        )
         return response.content
     }
 }
