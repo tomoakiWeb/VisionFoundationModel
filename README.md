@@ -12,38 +12,7 @@
 
 ## Visionフレームワークによるテキスト検出の仕組み
 
-### 1. 画像の前処理
-
-テキスト認識の精度を向上させるため、画像をグレースケールに変換します：
-
-```swift
-func preprocessImage(_ image: UIImage) -> UIImage? {
-    guard let cgImage = image.cgImage else { return nil }
-
-    let colorSpace = CGColorSpaceCreateDeviceGray()
-    let context = CGContext(
-        data: nil,
-        width: cgImage.width,
-        height: cgImage.height,
-        bitsPerComponent: 8,
-        bytesPerRow: 0,
-        space: colorSpace,
-        bitmapInfo: CGImageAlphaInfo.none.rawValue
-    )
-
-    context?.draw(cgImage, in: CGRect(x: 0, y: 0, width: cgImage.width, height: cgImage.height))
-
-    guard let grayImage = context?.makeImage() else { return nil }
-    return UIImage(cgImage: grayImage)
-}
-```
-
-**グレースケール変換の効果:**
-- カラー情報のノイズを除去
-- テキストと背景のコントラストを強調
-- 処理速度の向上
-
-### 2. VNRecognizeTextRequestの設定
+### 1. VNRecognizeTextRequestの設定
 
 Visionフレームワークの`VNRecognizeTextRequest`を使用してテキストを認識します：
 
@@ -78,14 +47,14 @@ request.recognitionLanguages = ["ja-JP","en-US"]
   - 日本語と英語を認識対象に設定
   - 混在したテキストでも正確に認識
 
-### 3. テキスト認識の実行
+### 2. テキスト認識の実行
 
 ```swift
 let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
 try handler.perform([request])
 ```
 
-### 4. 認識結果の取得
+### 3. 認識結果の取得
 
 ```swift
 guard let observations = request.results as? [VNRecognizedTextObservation] else {
@@ -257,7 +226,6 @@ VisionFoundationModel/
 ### Vision Framework
 - **高精度OCR**: VNRecognizeTextRequestRevision3を使用
 - **多言語対応**: 日本語と英語を同時認識
-- **画像最適化**: グレースケール変換で認識精度を向上
 - **正確な読み取り**: スペル自動修正を無効化し、単語帳の固有表記を正確に認識
 
 ### Foundation Models

@@ -85,8 +85,7 @@ class MainViewModel {
         recognizedText = ""
 
         do {
-            let processedImage = visionService.preprocessImage(image) ?? image
-            let text = try await visionService.recognizeText(from: processedImage)
+            let text = try await visionService.recognizeText(from: image)
             await MainActor.run {
                 recognizedText = text
                 isProcessingOCR = false

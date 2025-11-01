@@ -87,26 +87,6 @@ class VisionTextRecognitionService {
             }
         }
     }
-    
-    func preprocessImage(_ image: UIImage) -> UIImage? {
-        guard let cgImage = image.cgImage else { return nil }
-        
-        let colorSpace = CGColorSpaceCreateDeviceGray()
-        let context = CGContext(
-            data: nil,
-            width: cgImage.width,
-            height: cgImage.height,
-            bitsPerComponent: 8,
-            bytesPerRow: 0,
-            space: colorSpace,
-            bitmapInfo: CGImageAlphaInfo.none.rawValue
-        )
-
-        context?.draw(cgImage, in: CGRect(x: 0, y: 0, width: cgImage.width, height: cgImage.height))
-
-        guard let grayImage = context?.makeImage() else { return nil }
-        return UIImage(cgImage: grayImage)
-    }
 }
 
 // MARK: - Errors
