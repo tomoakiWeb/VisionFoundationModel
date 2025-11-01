@@ -11,6 +11,10 @@ class MainViewModel {
     var capturedImage: UIImage?
     var showingActionSheet = false
     var errorMessage = ""
+    var recognizedText = ""
+    var isProcessingOCR = false
+
+    private let visionService = VisionTextRecognitionService()
 
     init() {
         checkCameraPermission()
@@ -21,7 +25,6 @@ class MainViewModel {
     }
 
     func requestCameraPermission() async {
-        // シミュレーターかカメラが利用不可の場合はエラーを表示
         guard UIImagePickerController.isSourceTypeAvailable(.camera) else {
             await MainActor.run {
                 errorMessage = "このデバイスではカメラが利用できません。"
@@ -59,6 +62,47 @@ class MainViewModel {
     func openSettings() {
         if let settingsURL = URL(string: UIApplication.openSettingsURLString) {
             UIApplication.shared.open(settingsURL)
+        }
+    }
+    
+    func processOCR() async {
+        guard let image = capturedImage else {
+            errorMessage = "画像が選択されていません"
+            showPermissionAlert = true
+            return
+        }
+
+        isProcessingOCR = true
+        recognizedText = ""
+
+        do {
+            let processedImage = visionService.preprocessImage(image) ?? image
+            let text = try await visionService.recognizeText(from: processedImage)
+            await MainActor.run {
+                recognizedText = text
+                isProcessingOCR = false
+            }
+        } catch {
+            await MainActor.run {
+                errorMessage = "テキスト認識に失敗しました: \(error.localizedDescription)"
+                showPermissionAlert = true
+                isProcessingOCR = false
+            }
+        }
+    }
+    
+    func detectTextRegions() async -> [TextRegion] {
+        guard let image = capturedImage else { return [] }
+
+        do {
+            let regions = try await visionService.detectTextRegions(in: image)
+            return regions
+        } catch {
+            await MainActor.run {
+                errorMessage = "テキスト領域の検出に失敗しました: \(error.localizedDescription)"
+                showPermissionAlert = true
+            }
+            return []
         }
     }
 }

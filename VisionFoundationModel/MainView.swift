@@ -16,11 +16,11 @@ struct MainView: View {
             ScrollView {
                 VStack(spacing: 20) {
                     if let image = viewModel.capturedImage {
-                        VStack {
+                        VStack(spacing: 12) {
                             Image(uiImage: image)
                                 .resizable()
                                 .aspectRatio(contentMode: .fit)
-                                .frame(maxHeight: 400)
+                                .frame(maxHeight: 300)
                                 .cornerRadius(10)
                                 .shadow(radius: 5)
 
@@ -58,6 +58,67 @@ struct MainView: View {
                         .background(Color.blue)
                         .foregroundColor(.white)
                         .cornerRadius(10)
+                    }
+                    
+                    if viewModel.capturedImage != nil {
+                        Button(action: {
+                            Task {
+                                await viewModel.processOCR()
+                            }
+                        }) {
+                            HStack {
+                                if viewModel.isProcessingOCR {
+                                    ProgressView()
+                                        .scaleEffect(0.8)
+                                } else {
+                                    Image(systemName: "text.viewfinder")
+                                }
+                                Text(viewModel.isProcessingOCR ? "テキストを認識中..." : "テキストを認識")
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color.green)
+                            .foregroundColor(.white)
+                            .cornerRadius(10)
+                        }
+                        .disabled(viewModel.isProcessingOCR)
+                    }
+                    
+                    if !viewModel.recognizedText.isEmpty {
+                        VStack(alignment: .leading, spacing: 12) {
+                            HStack {
+                                Text("認識されたテキスト:")
+                                    .font(.headline)
+
+                                Spacer()
+
+                                Button(action: {
+                                    UIPasteboard.general.string = viewModel.recognizedText
+                                }) {
+                                    HStack(spacing: 4) {
+                                        Image(systemName: "doc.on.doc")
+                                        Text("コピー")
+                                    }
+                                    .font(.caption)
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 6)
+                                    .background(Color.blue)
+                                    .foregroundColor(.white)
+                                    .cornerRadius(6)
+                                }
+                            }
+
+                            ScrollView {
+                                Text(viewModel.recognizedText)
+                                    .font(.body)
+                                    .textSelection(.enabled)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                            }
+                            .frame(maxHeight: 300)
+                            .padding()
+                            .background(Color(.systemGray6))
+                            .cornerRadius(8)
+                        }
                     }
                 }
                 .padding()
