@@ -66,7 +66,7 @@ class VisionTextRecognitionService {
             }
 
             request.recognitionLevel = .accurate
-            request.usesLanguageCorrection = true
+            request.usesLanguageCorrection = false
             request.revision = VNRecognizeTextRequestRevision3
             request.automaticallyDetectsLanguage = false
             request.recognitionLanguages = ["ja-JP","en-US"]
