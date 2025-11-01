@@ -195,15 +195,15 @@ struct MainView: View {
                 )
                 .ignoresSafeArea()
             }
-            .alert("カメラへのアクセスが必要です", isPresented: $viewModel.showPermissionAlert) {
-                if !viewModel.errorMessage.contains("利用できません") {
+            .alert("エラーが発生しました", isPresented: $viewModel.showPermissionAlert) {
+                if viewModel.errorMessage.contains("利用できません") {
                     Button("設定を開く") {
                         viewModel.openSettings()
                     }
                 }
                 Button("キャンセル", role: .cancel) {}
             } message: {
-                Text(viewModel.errorMessage.isEmpty ? "このアプリでカメラを使用するには、設定からカメラへのアクセスを許可してください。" : viewModel.errorMessage)
+                Text(viewModel.errorMessage)
             }
         }
     }
